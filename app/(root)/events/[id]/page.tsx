@@ -3,6 +3,7 @@ import Collection from '@/components/shared/Collection';
 import { getEventById, getRelatedEventsByCategory } from '@/lib/actions/event.actions'
 import { formatDateTime } from '@/lib/utils';
 import { SearchParamProps } from '@/types'
+import { auth } from '@clerk/nextjs';
 import Image from 'next/image';
 
 const EventDetails = async ({ params: { id }, searchParams }: SearchParamProps) => {
@@ -12,8 +13,12 @@ const EventDetails = async ({ params: { id }, searchParams }: SearchParamProps) 
     categoryId: event.category._id,
     eventId: event._id,
     page: searchParams.page as string,
-  })
-
+  });
+  
+  const { sessionClaims } = auth();
+  const userId = sessionClaims?.userId as string;
+  const isEventCreator = userId === event.organizer._id.toString();
+  
   return (
     <>
     <section className="flex justify-center bg-primary-50 bg-dotted-pattern bg-contain">
@@ -47,7 +52,10 @@ const EventDetails = async ({ params: { id }, searchParams }: SearchParamProps) 
             </div>
           </div>
 
-          <CheckoutButton event={event} />
+         {isEventCreator? "Your Event"
+            :<CheckoutButton event={event} />
+           }
+
 
           <div className="flex flex-col gap-5">
             <div className='flex gap-2 md:gap-3'>
@@ -73,7 +81,7 @@ const EventDetails = async ({ params: { id }, searchParams }: SearchParamProps) 
           <div className="flex flex-col gap-2">
             <p className="p-bold-20 text-grey-600">What You'll Learn:</p>
             <p className="p-medium-16 lg:p-regular-18">{event.description}</p>
-            <p className="p-medium-16 lg:p-regular-18 truncate text-primary-500 underline">{event.url}</p>
+             <a href={event.url} target="main" className="p-medium-16 lg:p-regular-18 truncate text-primary-500 underline">{event.url}</a>
           </div>
         </div>
       </div>
